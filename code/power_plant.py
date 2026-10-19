@@ -62,3 +62,6 @@ class PowerPlant:
     self.production_mw = float(production_mw)
     self.x = x
     self.y = y
+
+  def __repr__(self):
+    return f"plant_type: {self.plant_type}, production_mw: {self.production_mw}, pos: {(self.x, self.y)}\n"
