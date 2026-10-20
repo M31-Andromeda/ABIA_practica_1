@@ -12,5 +12,29 @@ class EnergyNetworkState:
     def __init__(self, network : tuple):
         self.network = tuple(network)
 
+    def get_actions(self):
+        pass
+
+    def apply_action(self, action):
+        pass
+
+
+
+
+    def __hash__(self):
+        return hash(self.network)
+
+    def __eq__(self, other):
+        return isinstance(other, EnergyNetworkState) and self.network == other.network
+
+    def __repr__(self):
+        #TODO
+        return super().__repr__()
+
+
+
+
+
+
 
 
