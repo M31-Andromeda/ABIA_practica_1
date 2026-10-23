@@ -19,7 +19,7 @@ class EnergyNetworkProblem(Problem):
 
 
     def _create_initial_state(self) -> EnergyNetworkState:
-
+        
 
         return EnergyNetworkState()
 
