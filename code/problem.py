@@ -3,13 +3,14 @@ import sys
 from dataclasses import dataclass
 from collections.abc import Sequence
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "given_code"))    
-
 from aima.search import Problem, Node
 from network_state import EnergyNetworkState
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "given_code"))    
 from customers import generate_customers
 from power_plants import generate_power_plants
+
+
 
 
 @dataclass
