@@ -10,18 +10,16 @@ class EnergyNetworkState:
     tuple() ##FALTA EXEMPLE
     
     """
-    def __init__(self, clients):
-        self.network = tuple(None for client in clients)
+    def __init__(self, assignation, plants_available_energy):
+        
+        self.network = tuple(assignation)
+        self.plants_available_energy = plants_available_energy
 
     def get_actions(self):
         pass
 
     def apply_action(self, action):
         pass
-
-    def set_customer_to_plant(self, client, plant):
-        pass
-        
 
     def __hash__(self):
         return hash(self.network)
