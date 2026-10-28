@@ -74,4 +74,4 @@ class Customer:
     self.y = y
 
   def __repr__(self):
-    return f"(customer_type: {self.customer_type}, demand_mw: {self.demand_mw}, contract_type: {self.contract_type}, pos: {self.x, self.y})\n"
+    return f"(customer_type: {self.customer_type}, demand_mw: {self.demand_mw}, contract_type: {self.contract_type}, pos: {self.x, self.y})"

@@ -1,3 +1,4 @@
+ 
 
 class EnergyNetworkState:
     """
@@ -9,8 +10,8 @@ class EnergyNetworkState:
     tuple() ##FALTA EXEMPLE
     
     """
-    def __init__(self, network : tuple):
-        self.network = tuple(network)
+    def __init__(self, clients):
+        self.network = tuple(None for client in clients)
 
     def get_actions(self):
         pass
@@ -18,8 +19,9 @@ class EnergyNetworkState:
     def apply_action(self, action):
         pass
 
-
-
+    def set_customer_to_plant(self, client, plant):
+        pass
+        
 
     def __hash__(self):
         return hash(self.network)

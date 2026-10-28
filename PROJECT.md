@@ -30,7 +30,6 @@ He arreglat alguna cosa dels imports per a tenir un fix temporal mentre seguim t
 
 He afegit al init de problema una crida a compute supply, que diu quants mw hauria d'enviar cada central a cada client tenint en compte les perdues de les distancies. Un càlcul que només es fa a l'inici i no es torna a fer i aixi ho tenm cpm a consulta directa. Falta completar la funció del càlcul: _compute_supply
 
-A init s'ordenen els clients per (x,y) q es el q demanen al enunciat.
 
 
 
@@ -38,7 +37,95 @@ A init s'ordenen els clients per (x,y) q es el q demanen al enunciat.
 
 
 
-
-
-
-
+enerador de números aleatorios al crear los datos.
+11
+Como se
+vimos
+comentó
+en lasensesiones
+las sesiones
+de laboratorio,
+de laboratorio,
+al calcular
+para mantener
+la funciónunheurística
+comportamiento
+es obligatorio
+determinista
+acumular
+y facilitar
+sus diferentes
+la comparación
+componentes
+entreutilizando
+implementaciones,
+math.fsum().
+en Hill
+Además,
+Climbing
+para los
+mantener
+sucesores
+unadeben
+escalagenerarse
+de valoresiguiendo
+comparable
+un orden
+entre ejecuciones,
+determinista la
+de heurística
+los clientes.
+debe
+Antes
+expresarse
+de generar
+respecto
+los sucesores,
+a un costelos
+declientes
+referencia
+considerados
+constante. por
+Estelos
+coste
+operadores
+de referencia
+debencorresponde
+obligatoriamente
+al coste
+ordenarse
+total quelexicográficamente
+tendría la instanciapor
+si sus
+todas
+coordenadas,
+las centralesprimero
+permanecieran
+por la coordenada
+paradas. Por
+X y,
+tanto,
+en caso
+una de
+vezempate,
+calculado
+porellacoste
+coordenada
+asociadoY.alSestado
+trata de
+actual,
+una debe
+convención
+restarsedeeste
+implementación
+coste de referencia
+y no es
+antes
+necesario
+de devolver
+describirla
+el valor
+ni justificarla
+de la heurística.
+en la memoria.
+El coste de referencia debe calcularse una única vez para cada instancia, ya que no depende del estado de búsqueda. Estas convenciones se comentaron en las sesiones de laboratorio y no es necesario describirlas ni justificarlas en la memoria.Podéis justific

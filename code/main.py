@@ -16,6 +16,7 @@ def main():
 
     problem_exemple = EnergyNetworkProblem(config_exemple)
 
+
     ##------------------------------------------------------##
 
 if __name__ == "__main__":
