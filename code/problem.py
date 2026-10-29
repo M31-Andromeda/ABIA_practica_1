@@ -5,14 +5,15 @@ from math import hypot #distància euclidiana (per a totes les centrals)
 from dataclasses import dataclass
 from collections.abc import Sequence
 from pathlib import Path
-from itertools import chain
+from itertools import chain, groupby
 from aima.search import Problem, Node
-from network_state import EnergyNetworkState
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "given_code"))    
 from customers import generate_customers
 from power_plants import generate_power_plants
 from energy import get_loss_fraction
+from network_state import EnergyNetworkState
+
 
 
 
@@ -52,7 +53,7 @@ class EnergyNetworkProblem(Problem):
 
     def _create_initial_state(self, sol_type = 1) -> EnergyNetworkState:
 
-        if sol_type == 0: #dels garantitzats, agafem assignem a la central primer més gran
+        if sol_type == 0: #per ordre de prioritat, assignem a les centrals amb més producció
             assignation = [None] * len(self.customers)
 
             sorted_customers = chain(
@@ -67,10 +68,10 @@ class EnergyNetworkProblem(Problem):
             plants_available_energy = [plant.production_mw for plant in self.power_plants]
 
             for cust_i in sorted_customers:
-                for plant_j in sorted_power_plants:
-                    if self.supply_matrix[cust_i][plant_j] <= plants_available_energy[plant_j]:
-                        assignation[cust_i] = plant_j
-                        plants_available_energy[plant_j] -= self.supply_matrix[cust_i][plant_j]
+                for plant_i in sorted_power_plants:
+                    if self.supply_matrix[cust_i][plant_i] <= plants_available_energy[plant_i]:
+                        assignation[cust_i] = plant_i
+                        plants_available_energy[plant_i] -= self.supply_matrix[cust_i][plant_i]
                         break
                 else:
                     if self.customers[cust_i].contract_type == 0:
@@ -82,32 +83,71 @@ class EnergyNetworkProblem(Problem):
 
 
 
-    #     elif sol_type == 1: #dels garantitzats, agafem assignem a la central primer més propera
-    #         #clients garantits --> ordre aleatori --> selecció només clients garantits
-            # ordered = chain(
-            #     (c for c in self.customers if c.contract_type == 0),
-            #     (c for c in self.customers if c.contract_type == 1),
-            # )
+        elif sol_type == 1: #de tots el clients, amb prioritat, li seleccionem qualsevol central que tingui cost mínim per ell.
+            assignation = [None] * len(self.customers)
 
-    #         #capacitat disponible inicial cada central
-    #         remaining_capacity = [plant.production_mw for plant in self.power_plants]
+            sorted_customers = chain(
+                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 0),
+                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 1),
+            )
 
-            
-            
+            plants_available_energy = [plant.production_mw for plant in self.power_plants]
 
-        # return initial_state
+            for cust_i in sorted_customers:
+                plant_cost_lst = sorted(enumerate(self.supply_matrix[cust_i]), key = lambda x:x[1])
+                for plant_i, plant_cost in plant_cost_lst:
+                    if plants_available_energy[plant_i] >= plant_cost:
+                        assignation[cust_i] = plant_i
+                        plants_available_energy[plant_i] -= plant_cost
+                        break
 
-    def ordering_pow_plant_distance_for_customer(self, customer): # retornem els índexs de lesc entrals ordenades per distància al client
-        total_distances_customer = []
+                else:
+                    if self.customers[cust_i].contract_type == 0:
+                        print(f"lack of supply to guaranteed customer, No Valid solution")
+                        return None
 
-        for i, plant in enumerate(self.power_plants): 
-            distance = hypot(customer.x - plant.x, customer.y - plant.y)
-
-            total_distances_customer.append((distance, i ))
-
-        return total_distances_customer.sort()
+            return EnergyNetworkState(assignation, plants_available_energy)
 
 
+        elif sol_type == 2: #de tots el clients, amb prioritat, els hi seleccionem les centrals amb le mateix coste de suplir i per desempatara, escollim primer les que estan enceces y despres les mes grans
+            assignation = [None] * len(self.customers)
+
+            sorted_customers = chain(
+                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 0),
+                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 1),
+            )
+
+            plants_available_energy = [plant.production_mw for plant in self.power_plants]
+
+            for cust_i in sorted_customers:
+                best_candidate_index = None #power_plant index
+                best_candidate = None #same plant of above, but in a tuple, with useful data to compare
+
+                for plant_i, plant_cost in enumerate(self.supply_matrix[cust_i]):
+                    plant = self.power_plants[plant_i]
+
+                    if plants_available_energy[plant_i] < plant_cost:
+                        continue
+
+                    candidate = (-plant_cost, plants_available_energy[plant_i] < plant.production_mw, plant.production_mw) #tuple -cost, True if power_plant is on, else False, and size of the plant
+                    if best_candidate_index is None:
+                        best_candidate_index = plant_i
+                        best_candidate = candidate
+                    elif candidate > best_candidate: #compara dos tuples de l'estil (-2.3, True, 500) on el primer és el -cost, el segon element és si esta encessa, i el tercer que tan gran es la central
+                        best_candidate_index = plant_i
+                        best_candidate = candidate
+                    
+                if best_candidate_index is not None:
+                    assignation[cust_i] = best_candidate_index
+                    plants_available_energy[best_candidate_index] -= self.supply_matrix[cust_i][best_candidate_index]
+                    
+
+                elif self.customers[cust_i].contract_type == 0:
+                    print(f"lack of supply to guaranteed customer, No Valid solution")
+                    return None
+
+            return EnergyNetworkState(assignation, plants_available_energy)
+         
     def _compute_required(self):
 
         return [

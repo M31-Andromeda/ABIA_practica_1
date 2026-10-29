@@ -9,12 +9,14 @@ def main():
     config_exemple = Params(
         seed=12,
         counts=[5, 10, 25],
-        count=1000,
+        count=5,
         type_proportions=[0.25, 0.30, 0.45],
         guaranteed_proportion=0.75
     )
 
     problem_exemple = EnergyNetworkProblem(config_exemple)
+
+    print(problem_exemple.supply_matrix[4])
 
 
     ##------------------------------------------------------##
