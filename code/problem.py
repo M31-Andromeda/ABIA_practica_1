@@ -160,6 +160,17 @@ class EnergyNetworkProblem(Problem):
 
 
     def actions(self, state):
+
+        # operador assignar o desassignar un client a una central: 
+        # canvia network[i] de None a central o de central a None
+        # resta plants_available_energy[central] de la demanda del client i
+
+        # moure un client d'una central a una altra:
+        # canvia network[i] de central1 a central2
+        # resta plants_available_energy[central2] de la demanda del client i
+
+        # plantejar ús de swap
+
         pass
 
     def result(self, state, action):
@@ -172,7 +183,8 @@ class EnergyNetworkProblem(Problem):
 
         for cust_i, central in enumerate(state.network):
             customer = self.customers[cust_i]
-            if central is not None:
+
+            if central is None: # si el client no està servit (abans hi havia is not none, q es si el client esta servit)
                 cost += get_non_service_penalty(customer.customer_type)*customer.demand_mw
 
             else:
@@ -181,6 +193,20 @@ class EnergyNetworkProblem(Problem):
 
                 elif customer.contract_type == 1: # NOT GUARANTED
                     beneficis_bruts += get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw
+
+
+        #les centrals enceses paguen cost fix + produccio total i les apagades el cost fix
+
+        for plant_i, plant in enumerate(self.power_plants):
+            encesa = state.plants_available_energy[plant_i] < plant.production_mw  #si available energy < production, llavors esta encesa
+            if encesa:
+                cost += get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw
+            else: 
+                cost += get_stopped_cost(plant.plant_type)
+
+        return beneficis_bruts - cost
+
+                    
 
 
 
