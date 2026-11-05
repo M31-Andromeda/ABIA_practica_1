@@ -160,21 +160,26 @@ class EnergyNetworkProblem(Problem):
 
 
     def actions(self, state):
-
+        # op1
         # operador assignar o desassignar un client a una central: 
-        # canvia network[i] de None a central o de central a None
-        # resta plants_available_energy[central] de la demanda del client i
 
+        # op2
         # moure un client d'una central a una altra:
-        # canvia network[i] de central1 a central2
-        # resta plants_available_energy[central2] de la demanda del client i
-
+       
+        # op3
         # plantejar ús de swap
 
         pass
 
     def result(self, state, action):
-        pass
+        # op1
+        # canvia network[i] de None a central o de central a None
+        # resta plants_available_energy[central] de la demanda del client i
+
+        # op2
+        # canvia network[i] de central1 a central2
+        # resta plants_available_energy[central2] de la demanda del client i
+
         # return super().result(state, action)
 
     def value(self, state):
