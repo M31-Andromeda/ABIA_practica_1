@@ -11,7 +11,7 @@ from aima.search import Problem, Node
 sys.path.insert(0, str(Path(__file__).parent.parent / "given_code"))    
 from customers import generate_customers
 from power_plants import generate_power_plants
-from energy import get_loss_fraction
+from energy import *
 from network_state import EnergyNetworkState
 
 
@@ -167,6 +167,22 @@ class EnergyNetworkProblem(Problem):
         # return super().result(state, action)
 
     def value(self, state):
-        pass
-        # return super().value(state)
+        beneficis_bruts = 0
+        cost = 0
+
+        for cust_i, central in enumerate(state.network):
+            customer = self.customers[cust_i]
+            if central is not None:
+                cost += get_non_service_penalty(customer.customer_type)*customer.demand_mw
+
+            else:
+                if customer.contract_type == 0: # GUARANTED
+                    beneficis_bruts += get_guaranteed_tariff(customer.customer_type)*customer.demand_mw
+
+                elif customer.contract_type == 1: # NOT GUARANTED
+                    beneficis_bruts += get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw
+
+
+
+        
 
