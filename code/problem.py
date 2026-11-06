@@ -1,7 +1,7 @@
 import random
 import sys
 import heapq
-from math import hypot #distància euclidiana (per a totes les centrals)
+from math import * 
 from dataclasses import dataclass
 from collections.abc import Sequence
 from pathlib import Path
@@ -160,16 +160,26 @@ class EnergyNetworkProblem(Problem):
 
 
     def actions(self, state):
-        # op1
-        # operador assignar o desassignar un client a una central: 
+        actions = list()
 
-        # op2
-        # moure un client d'una central a una altra:
-       
-        # op3
-        # plantejar ús de swap
+        for cust_i, on_plant_i in enumerate(state.network):
+            customer = self.customers[cust_i]
 
-        pass
+            for plant_j in self.power_plants:
+
+            if customer.contract_type == 0:
+                pass
+
+
+
+
+            #swap
+            if on_plant_i is not None:
+                pass
+            
+
+
+        
 
     def result(self, state, action):
         # op1
@@ -184,33 +194,32 @@ class EnergyNetworkProblem(Problem):
         pass
 
     def value(self, state):
-        beneficis_bruts = 0
-        cost = 0
+        transactions = list()
+        plant_on = [False] * len(self.power_plants)
 
-        for cust_i, plant in enumerate(state.network):
+        for cust_i, plant_i in enumerate(state.network):
             customer = self.customers[cust_i]
-
-            if plant is None: # si el client no està servit (abans hi havia is not none, q es si el client esta servit)
-                cost += get_non_service_penalty(customer.customer_type)*customer.demand_mw
+            if plant_i is None: # si el client no està servit (abans hi havia is not none, q es si el client esta servit)
+                transactions.append(-1*get_non_service_penalty(customer.customer_type)*customer.demand_mw)
 
             else:
+                plant_on[plant_i] = True
                 if customer.contract_type == 0: # GUARANTED
-                    beneficis_bruts += get_guaranteed_tariff(customer.customer_type)*customer.demand_mw
+                    transactions.append(get_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
 
                 elif customer.contract_type == 1: # NOT GUARANTED
-                    beneficis_bruts += get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw
+                    transactions.append(get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
 
 
         #les centrals enceses paguen cost fix + produccio total i les apagades el cost fix
 
         for plant_i, plant in enumerate(self.power_plants):
-            encesa = state.plants_available_energy[plant_i] < plant.production_mw  #si available energy < production, llavors esta encesa
-            if encesa:
-                cost += get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw
+            if plant_on[plant_i]:
+                transactions.append(-1*(get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw))
             else: 
-                cost += get_stopped_cost(plant.plant_type)
+                transactions.append(-1*get_stopped_cost(plant.plant_type))
 
-        return beneficis_bruts - cost
+        return fsum(transactions)
 
                     
 
