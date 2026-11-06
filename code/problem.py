@@ -181,15 +181,16 @@ class EnergyNetworkProblem(Problem):
         # resta plants_available_energy[central2] de la demanda del client i
 
         # return super().result(state, action)
+        pass
 
     def value(self, state):
         beneficis_bruts = 0
         cost = 0
 
-        for cust_i, central in enumerate(state.network):
+        for cust_i, plant in enumerate(state.network):
             customer = self.customers[cust_i]
 
-            if central is None: # si el client no està servit (abans hi havia is not none, q es si el client esta servit)
+            if plant is None: # si el client no està servit (abans hi havia is not none, q es si el client esta servit)
                 cost += get_non_service_penalty(customer.customer_type)*customer.demand_mw
 
             else:
