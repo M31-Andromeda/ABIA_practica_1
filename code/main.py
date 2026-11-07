@@ -50,7 +50,7 @@ def main():
         weights = [0.01],
         operators=(Move, Swap),
         ini_sol_type = 2,
-        guaranteed_penalty=0
+        guaranteed_penalty=None
     )
 
     random.seed(config_exemple.seed)

@@ -185,7 +185,7 @@ def experiment_4():
 # EXP 5: Si ara no servir a un client garantit tmb és solució vàlida, com se'ls hauria de penalitzar a la funció heurística? (HC i SA)
 schedule = exp_schedule(k=10000, lam=0.00007, limit=100000)
 def experiment_5():
-    penalties = (0, 100, 500, 2000, 10000)
+    penalties = (0, 100, 500, 2000, 5000)
     for algorithm in ("HC", "SA"):
         for penalty in penalties:
             values, durations, steps, neighbors, unserved_guaranteed, profits = [], [], [], [], [], []
@@ -252,15 +252,18 @@ def experiment_6():
                 ip = InstrumentedProblem(e)
                 random.seed(params.seed)
 
+                start = time.perf_counter()
                 if algorithm == "HC":
                     solution = hill_climbing(ip)
                 else:
                     solution = simulated_annealing(ip, schedule)
-
-                duration = time.perf_counter() - StopIteration
+                duration = time.perf_counter() - start
 
                 value = e.value(solution)
+                profit, lost_mw = profit_and_losses(e, solution)
                 values.append(value)
+                profits.append(profit)
+                losses.append(lost_mw)
                 durations.append(duration)
                 expansions.append(ip.succs)
                 neighbors.append(ip.states)
@@ -273,7 +276,8 @@ def experiment_6():
 
             print(f"Algorithm: {algorithm}, Centrals: {centrals_per_tipus}, valid: {len(values)}/{len(escenaris)}, "
                   f"Avg A on: {mean(plants_a):.2f}, Avg B on: {mean(plants_b):.2f}, Avg C on: {mean(plants_c):.2f}, "
-                  f"Avg Value: {mean(values):.2f}, Avg Duration: {mean(durations):.4f}s, Avg Expansions: {mean(expansions):.2f}, "
+                  f"Avg Value: {mean(values):.2f}, Avg Profit: {mean(profits):.2f} €, Avg Lost: {mean(losses):.2f} MW, "
+                  f"Avg Duration: {mean(durations):.4f}s, Avg Expansions: {mean(expansions):.2f}, "
                   f"Avg Neighbors: {mean(neighbors):.2f}")
 
 
