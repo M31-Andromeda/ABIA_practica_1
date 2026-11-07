@@ -1,45 +1,22 @@
 import random
-import sys
-import heapq
-from math import * 
-from dataclasses import dataclass
-from collections.abc import Sequence
-from pathlib import Path
-from itertools import chain, groupby
-from aima.search import Problem, Node
+from math import fsum
+from aima.search import Problem
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "given_code"))    
-from customers import generate_customers
-from power_plants import generate_power_plants
-from energy import *
+from given import (
+    generate_customers,
+    generate_power_plants,
+    get_guaranteed_tariff,
+    get_non_guaranteed_tariff,
+    get_non_service_penalty,
+    get_production_cost_per_mw,
+    get_running_cost,
+    get_stopped_cost,
+)
+import pre_processing as pre
 from network_state import EnergyNetworkState
 from operators import Move, Swap
-
-
-
-
-@dataclass
-class Params:
-
-    seed: int
-
-    #----power_plants----#
-    counts: Sequence[int]
-    """Three non-negative counts to create power plants of types A, B and C."""
-
-    #----customers----#
-    count: int
-    """Non-negative number of customers to generate."""
-
-    type_proportions: Sequence[float]
-    """Three probabilities, summing to one, for extra-large, very large and large customers, respectively."""
-
-    guaranteed_proportion: float
-    """Probability of a guaranteed contract, in [0, 1]."""
-
-    weights: Sequence[float]
-    """weights for the evaluation function"""
-
+from parameters import Params
+from state_initializer import get_initial_config
 
 
     
@@ -53,149 +30,22 @@ class EnergyNetworkProblem(Problem):
         self.customers = generate_customers(config.count, config.type_proportions, config.guaranteed_proportion, config.seed)
         self.w1 = config.weights[0]
     
-        self.supply_matrix = self._compute_required() #customer[i],  power_plant[j]
-        self.loss_matrix = self._compute_loss() #customer[i],  power_plant[j]
-        self.customer_gain = self._compute_customer_gain() #customer[i]
-        self.plant_switch_cost = self._compute_switch_cost() #power_plant[j]
+        self.supply_matrix = pre.compute_supply_mat(self.customers, self.power_plants) #customer[i],  power_plant[j]
+        self.loss_matrix = pre.compute_loss(self.customers, self.supply_matrix) #customer[i],  power_plant[j]
+        self.customer_gain = pre.compute_customer_gain(self.customers) #customer[i]
+        self.plant_switch_cost = pre.compute_switch_cost(self.power_plants) #power_plant[j]
         self.initial = self._create_initial_state(sol_type)
 
 
     def _create_initial_state(self, sol_type = 1) -> EnergyNetworkState:
-
-        if sol_type == 0: #per ordre de prioritat, assignem a les centrals amb més producció
-            assignation = [None] * len(self.customers)
-
-            sorted_customers = chain(
-                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 0),
-                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 1),
-            )
-
-            sorted_power_plants = sorted(range(len(self.power_plants)), 
-                                         key= lambda plant_i: self.power_plants[plant_i].production_mw, 
-                                         reverse=True)
-            
-            plants_available_energy = [plant.production_mw for plant in self.power_plants]
-
-            for cust_i in sorted_customers:
-                for plant_i in sorted_power_plants:
-                    if self.supply_matrix[cust_i][plant_i] <= plants_available_energy[plant_i]:
-                        assignation[cust_i] = plant_i
-                        plants_available_energy[plant_i] -= self.supply_matrix[cust_i][plant_i]
-                        break
-                else:
-                    if self.customers[cust_i].contract_type == 0:
-                        print(f"lack of supply to guaranteed customer, No Valid solution")
-                        return None
-
-
-
-
-
-        elif sol_type == 1: #de tots el clients, amb prioritat, li seleccionem qualsevol central que tingui cost mínim per ell.
-            assignation = [None] * len(self.customers)
-
-            sorted_customers = chain(
-                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 0),
-                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 1),
-            )
-
-            plants_available_energy = [plant.production_mw for plant in self.power_plants]
-
-            for cust_i in sorted_customers:
-                plant_cost_lst = sorted(enumerate(self.supply_matrix[cust_i]), key = lambda x:x[1])
-                for plant_i, plant_cost in plant_cost_lst:
-                    if plants_available_energy[plant_i] >= plant_cost:
-                        assignation[cust_i] = plant_i
-                        plants_available_energy[plant_i] -= plant_cost
-                        break
-
-                else:
-                    if self.customers[cust_i].contract_type == 0:
-                        print(f"lack of supply to guaranteed customer, No Valid solution")
-                        return None
-
-
-
-        elif sol_type == 2: #de tots el clients, amb prioritat, els hi seleccionem les centrals amb le mateix coste de suplir i per desempatara, escollim primer les que estan enceces y despres les mes grans
-            assignation = [None] * len(self.customers)
-
-            sorted_customers = chain(
-                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 0),
-                (c[0] for c in enumerate(self.customers) if c[1].contract_type == 1),
-            )
-
-            plants_available_energy = [plant.production_mw for plant in self.power_plants]
-
-            for cust_i in sorted_customers:
-                best_candidate_index = None #power_plant index
-                best_candidate = None #same plant of above, but in a tuple, with useful data to compare
-
-                for plant_i, plant_cost in enumerate(self.supply_matrix[cust_i]):
-                    plant = self.power_plants[plant_i]
-
-                    if plants_available_energy[plant_i] < plant_cost:
-                        continue
-
-                    candidate = (-plant_cost, plants_available_energy[plant_i] < plant.production_mw, plant.production_mw) #tuple -cost, True if power_plant is on, else False, and size of the plant
-                    if best_candidate_index is None:
-                        best_candidate_index = plant_i
-                        best_candidate = candidate
-                    elif candidate > best_candidate: #compara dos tuples de l'estil (-2.3, True, 500) on el primer és el -cost, el segon element és si esta encessa, i el tercer que tan gran es la central
-                        best_candidate_index = plant_i
-                        best_candidate = candidate
-                    
-                if best_candidate_index is not None:
-                    assignation[cust_i] = best_candidate_index
-                    plants_available_energy[best_candidate_index] -= self.supply_matrix[cust_i][best_candidate_index]
-                    
-
-                elif self.customers[cust_i].contract_type == 0:
-                    print(f"lack of supply to guaranteed customer, No Valid solution")
-                    return None
+        assignation, plants_available_energy = get_initial_config(sol_type, self.customers, self.power_plants, self.supply_matrix)
+        if not assignation or not plants_available_energy:
+            return None
 
         initial_state = EnergyNetworkState(assignation, plants_available_energy)
         self.value(initial_state)
         return initial_state
          
-    def _compute_required(self):
-
-        return [
-            [customer.demand_mw/(1- get_loss_fraction(self._distance(customer, power_plant))) for power_plant in self.power_plants]
-            for customer in self.customers
-        ]
-   
-    def _compute_loss(self):
-        #MW perduts en el transport si la central j serveix el client i (el pes w1 s'aplica a value() i result())
-        return [
-            [self.supply_matrix[cust_i][plant_i] - customer.demand_mw for plant_i in range(len(self.power_plants))]
-            for cust_i, customer in enumerate(self.customers)
-        ]
-
-    def _compute_customer_gain(self):
-        #el que guanya el valor quan un client passa de no servit a servit: cobrem la tarifa i deixem de pagar la indemnització
-        gains = list()
-        for customer in self.customers:
-            if customer.contract_type == 0: # GUARANTED
-                tariff = get_guaranteed_tariff(customer.customer_type)
-            else: # NOT GUARANTED
-                tariff = get_non_guaranteed_tariff(customer.customer_type)
-            gains.append((tariff + get_non_service_penalty(customer.customer_type))*customer.demand_mw)
-        return gains
-
-    def _compute_switch_cost(self):
-        #el que costa de més tenir la central encesa respecte a tenir-la parada
-        return [
-            get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)*plant.production_mw - get_stopped_cost(plant.plant_type)
-            for plant in self.power_plants
-        ]
-
-    def _plant_is_empty(self, plants_available_energy, plant_i):
-        #si no té clients, l'energia lliure és tota la producció (cada client gasta >= 1 MW, la tolerància només absorbeix errors de float)
-        return plants_available_energy[plant_i] >= self.power_plants[plant_i].production_mw - 1e-6
-
-    def _distance(self, customer, plant):
-        return hypot(customer.x - plant.x, customer.y - plant.y)
-
 
     def actions(self, state):
         available_actions = list()
@@ -229,7 +79,6 @@ class EnergyNetworkProblem(Problem):
 
                     if self.supply_matrix[cust_j][on_plant_i] <= available_i and self.supply_matrix[cust_i][on_plant_j] <= available_k:
                         available_actions.append(Swap(cust_i, cust_j)) 
-
 
         return available_actions
         
@@ -316,11 +165,9 @@ class EnergyNetworkProblem(Problem):
             state.value = fsum(transactions)
 
         return state.value
-        
-
-                    
 
 
-
-        
+    def _plant_is_empty(self, plants_available_energy, plant_i):
+        #si no té clients, l'energia lliure és tota la producció (cada client gasta >= 1 MW, la tolerància només absorbeix errors de float)
+        return plants_available_energy[plant_i] >= self.power_plants[plant_i].production_mw - 1e-6
 
