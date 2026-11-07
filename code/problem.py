@@ -13,8 +13,7 @@ from customers import generate_customers
 from power_plants import generate_power_plants
 from energy import *
 from network_state import EnergyNetworkState
-
-
+from operators import Move, Swap
 
 
 
@@ -162,6 +161,41 @@ class EnergyNetworkProblem(Problem):
     def actions(self, state):
         actions = list()
 
+        sorted_customers = sorted(enumerate(state.network), 
+                                    key=lambda item: (self.customers[item[0]].x, self.customers[item[0]].y,),)
+
+        for position, (cust_i, on_plant_i) in enumerate(sorted_customers):
+            customer = self.customers[cust_i]
+
+            # MOVE: assignar o canviar de central
+            for plant_j in range(len(self.power_plants)):
+                if plant_j == on_plant_i:
+                    continue
+
+                if(self.supply_matrix[cust_i][plant_j] <= state.plants_available_energy[plant_j]):
+                    actions.append(Move(cust_i, on_plant_i, plant_j))
+
+            # MOVE: desassgnar només si el client es no garantit i està servit 
+            if customer.contract_type == 1 and on_plant_i is not None:
+                actions.append(Move(cust_i,on_plant_i, None))
+
+            # SWAP
+            if on_plant_i is not None:
+                for cust_k, on_plant_k in sorted_customers[position+1:]:
+                    if on_plant_k is None or on_plant_k == on_plant_i:
+                        continue
+
+                    available_i = (state.plants_available_energy[on_plant_i] + self.supply_matrix[cust_i][on_plant_i])
+                    available_k = (state.plants_available_energy[on_plant_k] + self.supply_matrix[cust_k][on_plant_k])
+
+                    if self.supply_matrix[cust_k][on_plant_i] <= available_i and self.supply_matrix[cust_i][on_plant_k] <= available_k:        
+                        actions.append(Swap(cust_i, cust_k))
+
+        return actions
+        
+
+# codi que tenieu començat :D    
+''' 
         for cust_i, on_plant_i in enumerate(state.network):
             customer = self.customers[cust_i]
 
@@ -176,9 +210,7 @@ class EnergyNetworkProblem(Problem):
             #swap
             if on_plant_i is not None:
                 pass
-            
-
-
+'''
         
 
     def result(self, state, action):

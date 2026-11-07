@@ -11,7 +11,6 @@ class EnergyNetworkState:
     
     """
     def __init__(self, assignation, plants_available_energy):
-        
         self.network = tuple(assignation)
         self.plants_available_energy = plants_available_energy
 
