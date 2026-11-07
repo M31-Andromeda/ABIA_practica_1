@@ -1,8 +1,10 @@
 import random
 import time
 
-from aima.search import hill_climbing, InstrumentedProblem
-from problem import EnergyNetworkProblem, Params
+from aima.search import hill_climbing, InstrumentedProblem, simulated_annealing, exp_schedule
+from problem import EnergyNetworkProblem
+from problem_sa import EnergyNetworkProblemSA
+from parameters import Params
 from network_state import EnergyNetworkState
 from operators import Move, Swap
 
@@ -45,41 +47,70 @@ def main():
         count=100,
         type_proportions=[0.25, 0.30, 0.45],
         guaranteed_proportion=0.75,
-        weights = [0.01]
+        weights = [0.01],
+        operators=(Move, Swap),
+        ini_sol_type = 2,
+        guaranteed_penalty=0
     )
-    operators = (Move, Swap)
-    sol_type = 2
 
-    problem_exemple = EnergyNetworkProblem(config_exemple, operators, sol_type)
-    if problem_exemple.initial is None:
+    random.seed(config_exemple.seed)
+    problem_exemple_hc = EnergyNetworkProblem(config_exemple)
+    problem_exemple_sa = EnergyNetworkProblemSA(config_exemple)
+    if problem_exemple_hc.initial is None or problem_exemple_sa.initial is None:
         print("La solució inicial no és vàlida per aquesta instància")
         return
 
     #InstrumentedProblem compta les crides a actions() (passos) i a result() (veïns generats)
-    instrumented = InstrumentedProblem(problem_exemple)
+    instrumented_hc = InstrumentedProblem(problem_exemple_hc)
+    instrumented_sa = InstrumentedProblem(problem_exemple_sa)
 
     random.seed(config_exemple.seed) #hill_climbing desempata a l'atzar: així és reproduïble
     start = time.perf_counter()
-    solution = hill_climbing(instrumented)
-    duration = time.perf_counter() - start
+    solution_hc = hill_climbing(instrumented_hc)
+    duration_hc = time.perf_counter() - start
+
+    start = time.perf_counter()
+    solution_sa = simulated_annealing(instrumented_sa, schedule=exp_schedule())
+    duration_sa = time.perf_counter() - start
 
     #recalculem el valor final des de zero (sense l'acumulació de l'increment)
-    solution = EnergyNetworkState(solution.network, solution.plants_available_energy)
+    solution_hc = EnergyNetworkState(solution_hc.network, solution_hc.plants_available_energy)
+    solution_sa = EnergyNetworkState(solution_sa.network, solution_sa.plants_available_energy)
 
-    initial_info = describe(problem_exemple, problem_exemple.initial)
-    final_info = describe(problem_exemple, solution)
+
+    initial_info_hc = describe(problem_exemple_hc, problem_exemple_hc.initial)
+    final_info_hc = describe(problem_exemple_hc, solution_hc)
+
+    initial_info_sa = describe(problem_exemple_sa, problem_exemple_sa.initial)
+    final_info_sa = describe(problem_exemple_sa, solution_sa)
 
     print(f"Seed {config_exemple.seed}, {config_exemple.count} clients, centrals {list(config_exemple.counts)}, "
-          f"operadors {[op.__name__ for op in operators]}, sol_type {sol_type}, w1 {problem_exemple.w1}\n")
+          f"operadors {[op.__name__ for op in config_exemple.operators]}, ini_sol_type {config_exemple.ini_sol_type}, w1 {config_exemple.weights}\n")
     print(f"{'':30}{'inicial':>30}{'final':>30}")
-    for key in initial_info:
-        ini, fin = initial_info[key], final_info[key]
+
+    for key in initial_info_hc:
+        ini, fin = initial_info_hc[key], final_info_hc[key]
         if isinstance(ini, float):
             print(f"{key:30}{ini:>30.2f}{fin:>30.2f}")
         else:
             print(f"{key:30}{str(ini):>30}{str(fin):>30}")
 
-    print(f"\npassos: {instrumented.succs - 1}, veïns generats: {instrumented.states}, temps: {duration:.2f} s")
+    print(f"\npassos: {instrumented_hc.succs - 1}, veïns generats: {instrumented_hc.states}, temps: {duration_hc:.2f} s")
+
+    print()
+    print()
+
+    for key in initial_info_sa:
+        ini, fin = initial_info_sa[key], final_info_sa[key]
+        if isinstance(ini, float):
+            print(f"{key:30}{ini:>30.2f}{fin:>30.2f}")
+        else:
+            print(f"{key:30}{str(ini):>30}{str(fin):>30}")
+
+    print(f"\npassos: {instrumented_sa.succs - 1}, veïns generats: {instrumented_sa.states}, temps: {duration_sa:.2f} s")
+
+
+
 
     ##------------------------------------------------------##
 

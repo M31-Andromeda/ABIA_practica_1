@@ -4,7 +4,7 @@ def _no_valid_solution():
     print(f"lack of supply to guaranteed customer, No Valid solution")
     return None, None
 
-def get_initial_config(sol_type, customers, power_plants, supply_matrix):
+def get_initial_config(ini_sol_type, customers, power_plants, supply_matrix):
 
     #comú a totes les estratègies: cap client assignat, totes les centrals amb tota la producció lliure,
     #i es recorren primer els clients garantits i després els no garantits
@@ -18,7 +18,7 @@ def get_initial_config(sol_type, customers, power_plants, supply_matrix):
     plants_available_energy = [plant.production_mw for plant in power_plants]
 
 
-    if sol_type == 0: #per ordre de prioritat, assignem a les centrals amb més producció
+    if ini_sol_type == 0: #per ordre de prioritat, assignem a les centrals amb més producció
         sorted_power_plants = sorted(range(len(power_plants)),
                                         key= lambda plant_i: power_plants[plant_i].production_mw,
                                         reverse=True)
@@ -34,7 +34,7 @@ def get_initial_config(sol_type, customers, power_plants, supply_matrix):
                     return _no_valid_solution()
 
 
-    elif sol_type == 1: #de tots el clients, amb prioritat, li seleccionem qualsevol central que tingui cost mínim per ell.
+    elif ini_sol_type == 1: #de tots el clients, amb prioritat, li seleccionem qualsevol central que tingui cost mínim per ell.
         for cust_i in sorted_customers:
             plant_cost_lst = sorted(enumerate(supply_matrix[cust_i]), key = lambda x:x[1])
             for plant_i, plant_cost in plant_cost_lst:
@@ -49,7 +49,7 @@ def get_initial_config(sol_type, customers, power_plants, supply_matrix):
 
 
 
-    elif sol_type == 2: #de tots el clients, amb prioritat, els hi seleccionem les centrals amb le mateix coste de suplir i per desempatara, escollim primer les que estan enceces y despres les mes grans
+    elif ini_sol_type == 2: #de tots el clients, amb prioritat, els hi seleccionem les centrals amb le mateix coste de suplir i per desempatara, escollim primer les que estan enceces y despres les mes grans
         for cust_i in sorted_customers:
             best_candidate_index = None #power_plant index
             best_candidate = None #same plant of above, but in a tuple, with useful data to compare
@@ -75,5 +75,8 @@ def get_initial_config(sol_type, customers, power_plants, supply_matrix):
 
             elif customers[cust_i].contract_type == 0:
                 return _no_valid_solution()
+
+    elif ini_sol_type == 3: #Experiment 5: Solució buida
+        pass
 
     return assignation, plants_available_energy

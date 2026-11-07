@@ -23,3 +23,13 @@ class Params:
     weights: Sequence[float]
     """weights for the evaluation function"""
 
+    operators: Sequence[object]
+    """operators used in Problem"""
+
+    ini_sol_type: int
+    """initial solution generator"""
+
+    guaranteed_penalty: float | None = None #experiment 5
+    """Penalty for guaranteed clients"""
+
+

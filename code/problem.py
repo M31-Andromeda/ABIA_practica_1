@@ -21,24 +21,25 @@ from state_initializer import get_initial_config
 
     
 class EnergyNetworkProblem(Problem):
-    def __init__(self, config: Params, operators = (Move, Swap), sol_type = 1):
+    def __init__(self, config: Params):
 
         self.config = config
         self.rand = random.Random(config.seed)
-        self.operators = operators
+        self.operators = config.operators
         self.power_plants = generate_power_plants(config.counts, config.seed)
         self.customers = generate_customers(config.count, config.type_proportions, config.guaranteed_proportion, config.seed)
         self.w1 = config.weights[0]
+        self.guaranteed_penalty = config.guaranteed_penalty #experiment 5
     
         self.supply_matrix = pre.compute_supply_mat(self.customers, self.power_plants) #customer[i],  power_plant[j]
         self.loss_matrix = pre.compute_loss(self.customers, self.supply_matrix) #customer[i],  power_plant[j]
-        self.customer_gain = pre.compute_customer_gain(self.customers) #customer[i]
+        self.customer_gain = pre.compute_customer_gain(self.customers, self.guaranteed_penalty) #customer[i]
         self.plant_switch_cost = pre.compute_switch_cost(self.power_plants) #power_plant[j]
-        self.initial = self._create_initial_state(sol_type)
+        self.initial = self._create_initial_state(config.ini_sol_type)
 
 
-    def _create_initial_state(self, sol_type = 1) -> EnergyNetworkState:
-        assignation, plants_available_energy = get_initial_config(sol_type, self.customers, self.power_plants, self.supply_matrix)
+    def _create_initial_state(self, ini_sol_type = 1) -> EnergyNetworkState:
+        assignation, plants_available_energy = get_initial_config(ini_sol_type, self.customers, self.power_plants, self.supply_matrix)
         if not assignation or not plants_available_energy:
             return None
 
@@ -63,8 +64,8 @@ class EnergyNetworkProblem(Problem):
                     if(self.supply_matrix[cust_i][plant_j] <= state.plants_available_energy[plant_j]):
                         available_actions.append(Move(cust_i, on_plant_i, plant_j))
 
-                # MOVE: desassgnar només si el client es no garantit i està servit 
-                if customer.contract_type == 1 and on_plant_i is not None:
+                # MOVE: desassgnar si està servit i (no és garantit ó hi ha penalització per als garantits) ##experiment 5
+                if on_plant_i is not None and (customer.contract_type == 1 or self.guaranteed_penalty is not None):
                     available_actions.append(Move(cust_i,on_plant_i, None))
 
             # SWAP
@@ -75,9 +76,9 @@ class EnergyNetworkProblem(Problem):
                         continue
 
                     available_i = (state.plants_available_energy[on_plant_i] + self.supply_matrix[cust_i][on_plant_i])
-                    available_k = (state.plants_available_energy[on_plant_j] + self.supply_matrix[cust_j][on_plant_j])
+                    available_j = (state.plants_available_energy[on_plant_j] + self.supply_matrix[cust_j][on_plant_j])
 
-                    if self.supply_matrix[cust_j][on_plant_i] <= available_i and self.supply_matrix[cust_i][on_plant_j] <= available_k:
+                    if self.supply_matrix[cust_j][on_plant_i] <= available_i and self.supply_matrix[cust_i][on_plant_j] <= available_j:
                         available_actions.append(Swap(cust_i, cust_j)) 
 
         return available_actions
@@ -140,7 +141,8 @@ class EnergyNetworkProblem(Problem):
                 customer = self.customers[cust_i]
                 if plant_i is None:
                     transactions.append(-1*get_non_service_penalty(customer.customer_type)*customer.demand_mw)
-
+                    if customer.contract_type == 0 and self.guaranteed_penalty is not None:  #experiment 5
+                        transactions.append(-1*self.guaranteed_penalty*customer.demand_mw)
                 else:
                     plant_on[plant_i] = True
                     if customer.contract_type == 0: # GUARANTED
@@ -148,7 +150,6 @@ class EnergyNetworkProblem(Problem):
 
                     elif customer.contract_type == 1: # NOT GUARANTED
                         transactions.append(get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
-
 
                     #penalitza els MW perduts en el transport, que creixen per trams amb la distància i amb la demanda del client
                     transactions.append(-self.w1*(self.supply_matrix[cust_i][plant_i] - customer.demand_mw))

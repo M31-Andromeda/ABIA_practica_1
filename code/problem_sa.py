@@ -10,7 +10,7 @@ class EnergyNetworkProblemSA(EnergyNetworkProblem):
 
     Ús:
         from aima.search import simulated_annealing, exp_schedule
-        problem = EnergyNetworkProblemSA(config, operators, sol_type)
+        problem = EnergyNetworkProblemSA(config)
         solution = simulated_annealing(problem, exp_schedule(k, lam, limit))
     """
 
@@ -29,6 +29,11 @@ class EnergyNetworkProblemSA(EnergyNetworkProblem):
             if action is not None:
                 return [action]
 
+        # si no n'hem trobat cap a l'atzar, generem totes les vàlides (cas rar, però exacte)
+        all_actions = super().actions(state)
+        if all_actions:
+            return [self.rand.choice(all_actions)]
+
         return []
 
 
@@ -44,11 +49,12 @@ class EnergyNetworkProblemSA(EnergyNetworkProblem):
         if on_plant_i == plant_desti:
             return None
         #el destí és None però el client és garantit, o no està servit
-        if plant_desti == None and (customer.contract_type == 0 or on_plant_i is None):
+        if plant_desti is None and (on_plant_i is None or (customer.contract_type == 0 and self.guaranteed_penalty is None)):
             return None
         #el destí és una central on no hi cap (mateixa condició que a actions() d'EnergyNetworkProblem)
         if plant_desti is not None and  self.supply_matrix[cust_i][plant_desti] > state.plants_available_energy[plant_desti]:
             return None
+
         
         return Move(cust_i, on_plant_i, plant_desti)
 
@@ -56,30 +62,12 @@ class EnergyNetworkProblemSA(EnergyNetworkProblem):
     def _random_swap(self, state):
         #retorna un Swap vàlid triat a l'atzar, o None si el que ha sortit no és vàlid
         cust_i, cust_j = self.rand.randrange(len(self.customers)), self.rand.randrange(len(self.customers))
-        customer_1, 
 
+        plant_i, plant_j = state.network[cust_i], state.network[cust_j]
+        if plant_i is None or plant_j is None or cust_i == cust_j or plant_i == plant_j:
+            return None
+        if (self.supply_matrix[cust_i][plant_j] > state.plants_available_energy[plant_j] + self.supply_matrix[cust_j][plant_j] or
+            self.supply_matrix[cust_j][plant_i] > state.plants_available_energy[plant_i] + self.supply_matrix[cust_i][plant_i]):
+            return None
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # TODO 1: tria dos clients diferents a l'atzar -> cust_i, cust_j
-
-        # TODO 2: descarta (return None) si algun no està servit o si estan a la mateixa central
-
-        # TODO 3: comprova que hi caben després d'intercanviar-los (mateixa condició que a actions() d'EnergyNetworkProblem)
-
-        # TODO 4: return Swap(cust_i, cust_j)
-        return None
+        return Swap(cust_i, cust_j)
