@@ -1,4 +1,3 @@
- from operators import Move, Swap
 
 class EnergyNetworkState:
     """
@@ -12,7 +11,8 @@ class EnergyNetworkState:
     """
     def __init__(self, assignation, plants_available_energy):
         self.network = tuple(assignation)
-        self.plants_available_energy = plants_available_energy
+        self.plants_available_energy = tuple(plants_available_energy)
+        self.value = None
 
     def apply_action(self, action):
         pass

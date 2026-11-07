@@ -37,17 +37,27 @@ class Params:
     guaranteed_proportion: float
     """Probability of a guaranteed contract, in [0, 1]."""
 
+    weights: Sequence[float]
+    """weights for the evaluation function"""
+
+
+
     
 class EnergyNetworkProblem(Problem):
-    def __init__(self, config: Params):
+    def __init__(self, config: Params, operators = (Move, Swap), sol_type = 1):
 
         self.config = config
         self.rand = random.Random(config.seed)
+        self.operators = operators
         self.power_plants = generate_power_plants(config.counts, config.seed)
         self.customers = generate_customers(config.count, config.type_proportions, config.guaranteed_proportion, config.seed)
+        self.w1 = config.weights[0]
     
         self.supply_matrix = self._compute_required() #customer[i],  power_plant[j]
-        self.initial = self._create_initial_state()
+        self.loss_matrix = self._compute_loss() #customer[i],  power_plant[j]
+        self.customer_gain = self._compute_customer_gain() #customer[i]
+        self.plant_switch_cost = self._compute_switch_cost() #power_plant[j]
+        self.initial = self._create_initial_state(sol_type)
 
 
     def _create_initial_state(self, sol_type = 1) -> EnergyNetworkState:
@@ -78,7 +88,6 @@ class EnergyNetworkProblem(Problem):
                         return None
 
 
-            return EnergyNetworkState(assignation, plants_available_energy)
 
 
 
@@ -105,7 +114,6 @@ class EnergyNetworkProblem(Problem):
                         print(f"lack of supply to guaranteed customer, No Valid solution")
                         return None
 
-            return EnergyNetworkState(assignation, plants_available_energy)
 
 
         elif sol_type == 2: #de tots el clients, amb prioritat, els hi seleccionem les centrals amb le mateix coste de suplir i per desempatara, escollim primer les que estan enceces y despres les mes grans
@@ -145,7 +153,9 @@ class EnergyNetworkProblem(Problem):
                     print(f"lack of supply to guaranteed customer, No Valid solution")
                     return None
 
-            return EnergyNetworkState(assignation, plants_available_energy)
+        initial_state = EnergyNetworkState(assignation, plants_available_energy)
+        self.value(initial_state)
+        return initial_state
          
     def _compute_required(self):
 
@@ -154,104 +164,159 @@ class EnergyNetworkProblem(Problem):
             for customer in self.customers
         ]
    
+    def _compute_loss(self):
+        #MW perduts en el transport si la central j serveix el client i (el pes w1 s'aplica a value() i result())
+        return [
+            [self.supply_matrix[cust_i][plant_i] - customer.demand_mw for plant_i in range(len(self.power_plants))]
+            for cust_i, customer in enumerate(self.customers)
+        ]
+
+    def _compute_customer_gain(self):
+        #el que guanya el valor quan un client passa de no servit a servit: cobrem la tarifa i deixem de pagar la indemnització
+        gains = list()
+        for customer in self.customers:
+            if customer.contract_type == 0: # GUARANTED
+                tariff = get_guaranteed_tariff(customer.customer_type)
+            else: # NOT GUARANTED
+                tariff = get_non_guaranteed_tariff(customer.customer_type)
+            gains.append((tariff + get_non_service_penalty(customer.customer_type))*customer.demand_mw)
+        return gains
+
+    def _compute_switch_cost(self):
+        #el que costa de més tenir la central encesa respecte a tenir-la parada
+        return [
+            get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)*plant.production_mw - get_stopped_cost(plant.plant_type)
+            for plant in self.power_plants
+        ]
+
+    def _plant_is_empty(self, plants_available_energy, plant_i):
+        #si no té clients, l'energia lliure és tota la producció (cada client gasta >= 1 MW, la tolerància només absorbeix errors de float)
+        return plants_available_energy[plant_i] >= self.power_plants[plant_i].production_mw - 1e-6
+
     def _distance(self, customer, plant):
         return hypot(customer.x - plant.x, customer.y - plant.y)
 
 
     def actions(self, state):
-        actions = list()
+        available_actions = list()
+        use_move = Move in self.operators
+        use_swap = Swap in self.operators
 
-        sorted_customers = sorted(enumerate(state.network), 
-                                    key=lambda item: (self.customers[item[0]].x, self.customers[item[0]].y,),)
-
-        for position, (cust_i, on_plant_i) in enumerate(sorted_customers):
+        for cust_i, on_plant_i in enumerate(state.network):
             customer = self.customers[cust_i]
+            if use_move:
+                # MOVE: assignar o canviar de central
+                for plant_j in range(len(self.power_plants)):
+                    if plant_j == on_plant_i:
+                        continue
 
-            # MOVE: assignar o canviar de central
-            for plant_j in range(len(self.power_plants)):
-                if plant_j == on_plant_i:
-                    continue
+                    if(self.supply_matrix[cust_i][plant_j] <= state.plants_available_energy[plant_j]):
+                        available_actions.append(Move(cust_i, on_plant_i, plant_j))
 
-                if(self.supply_matrix[cust_i][plant_j] <= state.plants_available_energy[plant_j]):
-                    actions.append(Move(cust_i, on_plant_i, plant_j))
-
-            # MOVE: desassgnar només si el client es no garantit i està servit 
-            if customer.contract_type == 1 and on_plant_i is not None:
-                actions.append(Move(cust_i,on_plant_i, None))
+                # MOVE: desassgnar només si el client es no garantit i està servit 
+                if customer.contract_type == 1 and on_plant_i is not None:
+                    available_actions.append(Move(cust_i,on_plant_i, None))
 
             # SWAP
-            if on_plant_i is not None:
-                for cust_k, on_plant_k in sorted_customers[position+1:]:
-                    if on_plant_k is None or on_plant_k == on_plant_i:
+            if on_plant_i is not None and use_swap:
+                for cust_j in range(cust_i + 1, len(state.network)):
+                    on_plant_j = state.network[cust_j]
+                    if on_plant_j is None or on_plant_j == on_plant_i:
                         continue
 
                     available_i = (state.plants_available_energy[on_plant_i] + self.supply_matrix[cust_i][on_plant_i])
-                    available_k = (state.plants_available_energy[on_plant_k] + self.supply_matrix[cust_k][on_plant_k])
+                    available_k = (state.plants_available_energy[on_plant_j] + self.supply_matrix[cust_j][on_plant_j])
 
-                    if self.supply_matrix[cust_k][on_plant_i] <= available_i and self.supply_matrix[cust_i][on_plant_k] <= available_k:        
-                        actions.append(Swap(cust_i, cust_k))
+                    if self.supply_matrix[cust_j][on_plant_i] <= available_i and self.supply_matrix[cust_i][on_plant_j] <= available_k:
+                        available_actions.append(Swap(cust_i, cust_j)) 
 
-        return actions
+
+        return available_actions
         
 
-# codi que tenieu començat :D    
-''' 
-        for cust_i, on_plant_i in enumerate(state.network):
-            customer = self.customers[cust_i]
-
-            for plant_j in self.power_plants:
-
-            if customer.contract_type == 0:
-                pass
-
-
-
-
-            #swap
-            if on_plant_i is not None:
-                pass
-'''
-        
 
     def result(self, state, action):
-        # op1
-        # canvia network[i] de None a central o de central a None
-        # resta plants_available_energy[central] de la demanda del client i
+        new_value_list = [state.value]
+        network = list(state.network)
+        plants_available_energy = list(state.plants_available_energy)
 
-        # op2
-        # canvia network[i] de central1 a central2
-        # resta plants_available_energy[central2] de la demanda del client i
+        if isinstance(action, Move):
+            cust_i = action.cust_i
+            plant_ori, plant_desti = action.orig, action.desti
+            network[cust_i] = plant_desti
 
-        # return super().result(state, action)
-        pass
+            # treure el client de la central d'origen (si en tenia)
+            if plant_ori is not None:
+                plants_available_energy[plant_ori] += self.supply_matrix[cust_i][plant_ori]
+                new_value_list.append(-self.customer_gain[cust_i])
+                new_value_list.append(self.w1*self.loss_matrix[cust_i][plant_ori])
+                if self._plant_is_empty(plants_available_energy, plant_ori): # s'ha quedat sense clients -> s'apaga
+                    new_value_list.append(self.plant_switch_cost[plant_ori])
+
+            # posar el client a la central de destí (si en té)
+            if plant_desti is not None:
+                if self._plant_is_empty(plants_available_energy, plant_desti): # no tenia clients -> s'encén
+                    new_value_list.append(-self.plant_switch_cost[plant_desti])
+                plants_available_energy[plant_desti] -= self.supply_matrix[cust_i][plant_desti]
+                new_value_list.append(self.customer_gain[cust_i])
+                new_value_list.append(-self.w1*self.loss_matrix[cust_i][plant_desti])
+
+        if isinstance(action, Swap):
+            cust_i, cust_j = action.cust_i, action.cust_j
+            plant_i, plant_j = network[cust_i], network[cust_j]
+
+            plants_available_energy[plant_i] += self.supply_matrix[cust_i][plant_i] - self.supply_matrix[cust_j][plant_i]
+            plants_available_energy[plant_j] += self.supply_matrix[cust_j][plant_j] - self.supply_matrix[cust_i][plant_j]
+
+            network[cust_i], network[cust_j] = plant_j, plant_i
+
+            # cap central s'encén ni s'apaga i els dos clients segueixen servits: només canvien les pèrdues
+            new_value_list.extend([
+                self.w1*self.loss_matrix[cust_i][plant_i], self.w1*self.loss_matrix[cust_j][plant_j],
+                -self.w1*self.loss_matrix[cust_i][plant_j], -self.w1*self.loss_matrix[cust_j][plant_i],
+            ])
+
+
+        new_state = EnergyNetworkState(network, plants_available_energy)
+        new_state.value = fsum(new_value_list)
+        return new_state
+            
 
     def value(self, state):
-        transactions = list()
-        plant_on = [False] * len(self.power_plants)
+        if state.value is None:
+            transactions = list()
+            plant_on = [False] * len(self.power_plants)
 
-        for cust_i, plant_i in enumerate(state.network):
-            customer = self.customers[cust_i]
-            if plant_i is None: # si el client no està servit (abans hi havia is not none, q es si el client esta servit)
-                transactions.append(-1*get_non_service_penalty(customer.customer_type)*customer.demand_mw)
+            for cust_i, plant_i in enumerate(state.network):
+                customer = self.customers[cust_i]
+                if plant_i is None:
+                    transactions.append(-1*get_non_service_penalty(customer.customer_type)*customer.demand_mw)
 
-            else:
-                plant_on[plant_i] = True
-                if customer.contract_type == 0: # GUARANTED
-                    transactions.append(get_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
+                else:
+                    plant_on[plant_i] = True
+                    if customer.contract_type == 0: # GUARANTED
+                        transactions.append(get_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
 
-                elif customer.contract_type == 1: # NOT GUARANTED
-                    transactions.append(get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
+                    elif customer.contract_type == 1: # NOT GUARANTED
+                        transactions.append(get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
 
 
-        #les centrals enceses paguen cost fix + produccio total i les apagades el cost fix
+                    #penalitza els MW perduts en el transport, que creixen per trams amb la distància i amb la demanda del client
+                    transactions.append(-self.w1*(self.supply_matrix[cust_i][plant_i] - customer.demand_mw))
 
-        for plant_i, plant in enumerate(self.power_plants):
-            if plant_on[plant_i]:
-                transactions.append(-1*(get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw))
-            else: 
-                transactions.append(-1*get_stopped_cost(plant.plant_type))
 
-        return fsum(transactions)
+            #les centrals enceses paguen cost fix + produccio total i les apagades el cost fix
+
+            for plant_i, plant in enumerate(self.power_plants):
+                if plant_on[plant_i]:
+                    transactions.append(-1*(get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw))
+                else: 
+                    transactions.append(-1*get_stopped_cost(plant.plant_type))
+            
+            state.value = fsum(transactions)
+
+        return state.value
+        
 
                     
 

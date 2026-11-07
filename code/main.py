@@ -11,7 +11,8 @@ def main():
         counts=[5, 10, 25],
         count=5,
         type_proportions=[0.25, 0.30, 0.45],
-        guaranteed_proportion=0.75
+        guaranteed_proportion=0.75,
+        weights = [0]
     )
 
     problem_exemple = EnergyNetworkProblem(config_exemple)
