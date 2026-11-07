@@ -185,7 +185,7 @@ def experiment_4():
 # EXP 5: Si ara no servir a un client garantit tmb és solució vàlida, com se'ls hauria de penalitzar a la funció heurística? (HC i SA)
 schedule = exp_schedule(k=10000, lam=0.00007, limit=100000)
 def experiment_5():
-    penalties = (0, 100, 500, 2000, 5000)
+    penalties = (0, 100, 500, 2000, 10000)
     for algorithm in ("HC", "SA"):
         for penalty in penalties:
             values, durations, steps, neighbors, unserved_guaranteed, profits = [], [], [], [], [], []
