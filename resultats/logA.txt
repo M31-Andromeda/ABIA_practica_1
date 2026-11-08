@@ -1,0 +1,5 @@
+Weight: 0, Avg Value: 1229859.21, Avg Profit: 1229859.21 €, Avg Lost: 486.88 MW, Avg Duration: 0.3834s, Avg Steps: 0.10, Avg Neighbors: 54542.10
+Weight: 0.01, Avg Value: 1260611.20, Avg Profit: 1260614.96 €, Avg Lost: 375.78 MW, Avg Duration: 60.4249s, Avg Steps: 180.60, Avg Neighbors: 9553462.00
+Weight: 1, Avg Value: 1260239.18, Avg Profit: 1260614.96 €, Avg Lost: 375.78 MW, Avg Duration: 59.1120s, Avg Steps: 180.60, Avg Neighbors: 9553462.00
+Weight: 10, Avg Value: 1256897.92, Avg Profit: 1260644.21 €, Avg Lost: 374.63 MW, Avg Duration: 59.7843s, Avg Steps: 181.70, Avg Neighbors: 9651224.80
+Weight: 100, Avg Value: 1224020.43, Avg Profit: 1261325.51 €, Avg Lost: 373.05 MW, Avg Duration: 59.7506s, Avg Steps: 184.50, Avg Neighbors: 9567651.90

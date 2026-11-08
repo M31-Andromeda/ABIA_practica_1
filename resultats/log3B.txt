@@ -1,0 +1,4 @@
+Initial solution: 1, Temperature: 0.01, T_final: 1e-05, Cooling: 6.907755278982137e-05, Limit: 100000, Mean h: 1258536.51, Avg Profit: 1258540.46 €, Avg Lost: 394.86 MW, Mean Duration: 1.6724s, Avg Steps: 100000.00, Avg Neighbors: 100000.00
+Initial solution: 1, Temperature: 0.01, T_final: 1e-05, Cooling: 2.763102111592855e-05, Limit: 250000, Mean h: 1260665.56, Avg Profit: 1260669.36 €, Avg Lost: 380.44 MW, Mean Duration: 5.1748s, Avg Steps: 250000.00, Avg Neighbors: 250000.00
+Initial solution: 1, Temperature: 0.01, T_final: 1e-05, Cooling: 1.3815510557964274e-05, Limit: 500000, Mean h: 1262695.51, Avg Profit: 1262699.26 €, Avg Lost: 374.62 MW, Mean Duration: 9.2672s, Avg Steps: 500000.00, Avg Neighbors: 500000.00
+Initial solution: 1, Temperature: 0.01, T_final: 1e-05, Cooling: 6.907755278982137e-06, Limit: 1000000, Mean h: 1261935.43, Avg Profit: 1261939.11 €, Avg Lost: 368.12 MW, Mean Duration: 17.8683s, Avg Steps: 1000000.00, Avg Neighbors: 1000000.00

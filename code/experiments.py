@@ -24,7 +24,7 @@ escenaris = [Params(seed=seed,
                     guaranteed_penalty=None)
                     for seed in range(10)]
 
-schedule = exp_schedule(k=10000, lam=0.00007, limit=100000)  #pendent de veure amb el exp3
+schedule = exp_schedule(k=0.01, lam=math.log(0.01/0.00001)/500_000, limit=500_000)
 
 
 def profit_and_losses(problem, state):
@@ -141,8 +141,8 @@ def experiment_3A():
                 f"Avg Steps: {mean(iterations):.2f}, Avg Neighbors: {mean(neighbors):.2f}")
 
 def experiment_3B():
-    T_final = 0 ##TODO
-    k = 0 ##TODO
+    T_final = 0.00001
+    k = 0.01
     for max_iter in (100_000, 250_000, 500_000, 1_000_000):
         lam = math.log(k/T_final)/max_iter
 
@@ -224,7 +224,7 @@ def experiment_4():
 
 # EXP 5: Si ara no servir a un client garantit tmb és solució vàlida, com se'ls hauria de penalitzar a la funció heurística? (HC i SA)
 def experiment_5():
-    penalties = (0, 100, 500, 2000, 10000)
+    penalties = (4000, 6000, 8000)
     for algorithm in ("HC", "SA"):
         for penalty in penalties:
             values, durations, steps, neighbors, unserved_guaranteed, profits = [], [], [], [], [], []
@@ -332,6 +332,8 @@ def experiment_A():
         for params in escenaris:
             config = replace(params, weights = [w])
             e = EnergyNetworkProblem(config)
+            if e.initial is None:
+                continue
             ip = InstrumentedProblem(e)
 
             random.seed(params.seed)
@@ -340,13 +342,16 @@ def experiment_A():
             duration = time.perf_counter() - start
 
             value = e.value(solution)
-            profit, loss = profit_and_losses(e, solution)
+            profit, lost_mw = profit_and_losses(e, solution)
             values.append(value)
             profits.append(profit)
-            losses.append(loss)
+            losses.append(lost_mw)
             durations.append(duration)
             steps.append(ip.succs-1)
             neighbors.append(ip.states)
+
+            guardar("expA", {"w1": w, "seed": params.seed, "value": value, "profit": profit, "lost_mw": lost_mw,
+                             "temps": duration, "passos": ip.succs - 1, "veins": ip.states})
 
         print(f"Weight: {w}, Avg Value: {mean(values):.2f}, Avg Profit: {mean(profits):.2f} €, "
               f"Avg Lost: {mean(losses):.2f} MW, Avg Duration: {mean(durations):.4f}s, "
@@ -359,12 +364,15 @@ def experiment_B():
     for algorithm in ("HC", "SA"):
         values, durations, steps, neighbors, profits, losses = [], [], [], [], [], []
         for params in escenaris:
-            config = replace(params, guaranteed_penalty=None)  #falta comprovar al exp3
+            config = replace(params) #falta comprovar al exp3
 
             if algorithm == "HC":
                 e = EnergyNetworkProblem(config)
             else:
                 e = EnergyNetworkProblemSA(config)
+            if e.initial is None:
+                continue
+
             ip = InstrumentedProblem(e)
             random.seed(params.seed)
             start = time.perf_counter()
@@ -374,18 +382,22 @@ def experiment_B():
                 solution = simulated_annealing(ip, schedule) #falta saber el millot schedule a partor del exp3
             duration = time.perf_counter() - start
             value = e.value(solution)
-            profit, loss = profit_and_losses(e, solution)
+            profit, lost_mw = profit_and_losses(e, solution)
+            nsteps = ip.succs - 1 if algorithm =="HC" else ip.succs
 
             values.append(value)
             profits.append(profit)
-            losses.append(loss)
+            losses.append(lost_mw)
             durations.append(duration)
-            steps.append(ip.succs-1)
+            steps.append(nsteps)
             neighbors.append(ip.states)
 
-            print(f"Algorithm: {algorithm}, Avg Profit: {mean(profits):.2f} €, "
-                  f"Avg Value: {mean(values):.2f}, Avg Duration: {mean(durations):.4f}s, Avg Steps: {mean(steps):.2f}")
-                
+            guardar("expB", {"algorisme": algorithm, "seed": params.seed, "value": value, "profit": profit,
+                             "lost_mw": lost_mw, "temps": duration, "passos_o_iteracions": nsteps, "veins": ip.states})
+
+        print(f"Algorithm: {algorithm}, valid: {len(values)}/{len(escenaris)}, Avg Value: {mean(values):.2f}, "
+              f"Avg Profit: {mean(profits):.2f} €, Avg Lost: {mean(losses):.2f} MW, Avg Duration: {mean(durations):.4f}s, "
+              f"Avg Steps/Iter: {mean(steps):.2f}, Avg Neighbors: {mean(neighbors):.2f}")
 
 if __name__ == "__main__":
-    pass
+    experiment_3B()

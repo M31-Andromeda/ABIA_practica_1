@@ -1,0 +1,6 @@
+Algorithm: HC, Penalty: 4000, Avg Unserved: 210.50, Max Unserved: 285, Avg Profit: 699278.70 €, Avg Value: -618184.99, Avg Duration: 41.3098s, Avg Steps: 761.00
+Algorithm: HC, Penalty: 6000, Avg Unserved: 78.30, Max Unserved: 199, Avg Profit: 850397.60 €, Avg Value: 176167.55, Avg Duration: 78.0644s, Avg Steps: 1053.70
+Algorithm: HC, Penalty: 8000, Avg Unserved: 0.00, Max Unserved: 0, Avg Profit: 1052048.26 €, Avg Value: 1052044.28, Avg Duration: 182.8697s, Avg Steps: 1441.60
+Algorithm: SA, Penalty: 4000, Avg Unserved: 5.10, Max Unserved: 17, Avg Profit: 1243490.26 €, Avg Value: 893726.49, Avg Duration: 3.7337s, Avg Steps: 499999.00
+Algorithm: SA, Penalty: 6000, Avg Unserved: 5.00, Max Unserved: 17, Avg Profit: 1245430.66 €, Avg Value: 728556.91, Avg Duration: 3.8103s, Avg Steps: 499999.00
+Algorithm: SA, Penalty: 8000, Avg Unserved: 5.00, Max Unserved: 19, Avg Profit: 1246025.21 €, Avg Value: 564981.44, Avg Duration: 3.8110s, Avg Steps: 499999.00

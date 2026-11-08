@@ -1,0 +1,2 @@
+Algorithm: HC, valid: 10/10, Avg Value: 1260611.20, Avg Profit: 1260614.96 €, Avg Lost: 375.78 MW, Avg Duration: 60.9405s, Avg Steps/Iter: 180.60, Avg Neighbors: 9553462.00
+Algorithm: SA, valid: 10/10, Avg Value: 1262695.51, Avg Profit: 1262699.26 €, Avg Lost: 374.62 MW, Avg Duration: 10.3654s, Avg Steps/Iter: 500000.00, Avg Neighbors: 500000.00
