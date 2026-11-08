@@ -1,0 +1,3 @@
+Initial Solution: 0, valid: 10/10, Avg Value: 1228383.10, Avg Profit: 1228386.83 €, Avg Lost: 373.41 MW, Avg Duration: 155.4550s, Avg Steps: 319.60, Avg Neighbors: 24203111.10
+Initial Solution: 1, valid: 10/10, Avg Value: 1260611.20, Avg Profit: 1260614.96 €, Avg Lost: 375.78 MW, Avg Duration: 57.8552s, Avg Steps: 180.60, Avg Neighbors: 9553462.00
+Initial Solution: 2, valid: 10/10, Avg Value: 1259535.46, Avg Profit: 1259539.21 €, Avg Lost: 374.99 MW, Avg Duration: 63.4838s, Avg Steps: 188.50, Avg Neighbors: 10382258.30

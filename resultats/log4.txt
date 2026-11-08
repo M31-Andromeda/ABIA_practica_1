@@ -1,0 +1,7 @@
+Clients: 250, Centrals: 40(5, 10, 25), Valid: 10/10, Avg Value: -136164.14, Avg Profit: -136163.62 €, Avg Lost: 51.65 MW, Avg Duration: 0.8905s, Avg Steps: 5.60, Avg Neighbors: 227093.60
+Clients: 500, Centrals: 40(5, 10, 25), Valid: 10/10, Avg Value: 310256.21, Avg Profit: 310257.37 €, Avg Lost: 116.22 MW, Avg Duration: 7.5640s, Avg Steps: 13.80, Avg Neighbors: 1421694.60
+Clients: 750, Centrals: 40(5, 10, 25), Valid: 10/10, Avg Value: 807712.97, Avg Profit: 807715.05 €, Avg Lost: 208.00 MW, Avg Duration: 32.2739s, Avg Steps: 43.70, Avg Neighbors: 5529692.20
+Clients: 1000, Centrals: 40(5, 10, 25), Valid: 10/10, Avg Value: 1260611.20, Avg Profit: 1260614.96 €, Avg Lost: 375.78 MW, Avg Duration: 60.7906s, Avg Steps: 180.60, Avg Neighbors: 9553462.00
+Clients: 1000, Centrals: 80(10, 20, 50), Valid: 10/10, Avg Value: 706423.85, Avg Profit: 706424.79 €, Avg Lost: 93.92 MW, Avg Duration: 55.0189s, Avg Steps: 20.00, Avg Neighbors: 8256115.80
+Clients: 1000, Centrals: 120(15, 30, 75), Valid: 10/10, Avg Value: 263099.09, Avg Profit: 263099.46 €, Avg Lost: 36.69 MW, Avg Duration: 50.1472s, Avg Steps: 14.10, Avg Neighbors: 7411312.20
+Clients: 1000, Centrals: 160(20, 40, 100), Valid: 10/10, Avg Value: -65217.54, Avg Profit: -65217.38 €, Avg Lost: 15.64 MW, Avg Duration: 61.0807s, Avg Steps: 13.70, Avg Neighbors: 8421060.00

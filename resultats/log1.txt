@@ -1,0 +1,2 @@
+Operators: ['Move'], Avg Value: 1229854.35, Avg Profit: 1229859.21 €, Avg Lost: 485.63 MW, Avg Duration: 0.0239s, Avg Steps: 0.10, Avg Neighbors: 3347.50
+Operators: ['Move', 'Swap'], Avg Value: 1260611.20, Avg Profit: 1260614.96 €, Avg Lost: 375.78 MW, Avg Duration: 64.1920s, Avg Steps: 180.60, Avg Neighbors: 9553462.00

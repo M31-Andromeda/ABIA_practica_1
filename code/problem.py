@@ -1,5 +1,4 @@
 import random
-from math import fsum
 from aima.search import Problem
 
 from given import (
@@ -128,9 +127,14 @@ class EnergyNetworkProblem(Problem):
 
 
         new_state = EnergyNetworkState(network, plants_available_energy)
-        new_state.value = fsum(new_value_list)
+        new_state.value = sum(new_value_list)
         return new_state
-            
+
+
+    def goal_test(self, state):
+        #cerca local: no podem saber si hem arribat a l'estat final, per tant sempre fals
+        return False
+
 
     def value(self, state):
         if state.value is None:
@@ -156,14 +160,13 @@ class EnergyNetworkProblem(Problem):
 
 
             #les centrals enceses paguen cost fix + produccio total i les apagades el cost fix
-
             for plant_i, plant in enumerate(self.power_plants):
                 if plant_on[plant_i]:
                     transactions.append(-1*(get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw))
                 else: 
                     transactions.append(-1*get_stopped_cost(plant.plant_type))
             
-            state.value = fsum(transactions)
+            state.value = sum(transactions)
 
         return state.value
 

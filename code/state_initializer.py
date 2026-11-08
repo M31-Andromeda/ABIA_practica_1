@@ -18,20 +18,16 @@ def get_initial_config(ini_sol_type, customers, power_plants, supply_matrix):
     plants_available_energy = [plant.production_mw for plant in power_plants]
 
 
-    if ini_sol_type == 0: #per ordre de prioritat, assignem a les centrals amb més producció
-        sorted_power_plants = sorted(range(len(power_plants)),
-                                        key= lambda plant_i: power_plants[plant_i].production_mw,
-                                        reverse=True)
-
-        for cust_i in sorted_customers:
-            for plant_i in sorted_power_plants:
-                if supply_matrix[cust_i][plant_i] <= plants_available_energy[plant_i]:
+    if ini_sol_type == 0: #només els clients garantits, a la central amb menys cost de suplir que hi càpiga; els no garantits es queden sense servir
+        for cust_i in (c[0] for c in enumerate(customers) if c[1].contract_type == 0):
+            plant_cost_lst = sorted(enumerate(supply_matrix[cust_i]), key = lambda x:x[1])
+            for plant_i, plant_cost in plant_cost_lst:
+                if plants_available_energy[plant_i] >= plant_cost:
                     assignation[cust_i] = plant_i
-                    plants_available_energy[plant_i] -= supply_matrix[cust_i][plant_i]
+                    plants_available_energy[plant_i] -= plant_cost
                     break
             else:
-                if customers[cust_i].contract_type == 0:
-                    return _no_valid_solution()
+                return _no_valid_solution()
 
 
     elif ini_sol_type == 1: #de tots el clients, amb prioritat, li seleccionem qualsevol central que tingui cost mínim per ell.
