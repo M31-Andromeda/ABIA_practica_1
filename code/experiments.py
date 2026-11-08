@@ -5,7 +5,6 @@ from statistics import mean
 import random 
 from dataclasses import replace
 
-from network_state import EnergyNetworkState
 from problem import EnergyNetworkProblem
 from problem_sa import EnergyNetworkProblemSA
 from parameters import Params
@@ -59,7 +58,6 @@ def experiment_1():
             steps.append(ip.succs - 1)
             neighbors.append(ip.states)
             guardar("exp1", {"operadors": "+".join(op.__name__ for op in operators), "seed": params.seed, "value": value, "profit": profit, "lost_mw": lost_mw, "temps": duration, "passos": ip.succs - 1, "veins": ip.states})
-            #print(f"Operators: {operators}, Seed: {params.seed}, Value: {value}, Duration: {duration:.4f}s")
 
         print(f"Operators: {[op.__name__ for op in operators]}, Avg Value: {mean(values):.2f}, Avg Profit: {mean(profits):.2f} €, "
               f"Avg Lost: {mean(losses):.2f} MW, Avg Duration: {mean(durations):.4f}s, "
