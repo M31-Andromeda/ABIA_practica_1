@@ -75,11 +75,17 @@ Move+Swap (n=10): value = 1260611.20 (51815.77), temps = 64.19 (23.90), passos =
 ('HC', 100.0) (n=10): garantits_sense_servir = 729.30 (10.01), profit = -370822.85 (12962.91), temps = 3.55 (0.93)
 ('HC', 500.0) (n=10): garantits_sense_servir = 648.00 (15.27), profit = -143259.01 (42308.51), temps = 13.09 (1.60)
 ('HC', 2000.0) (n=10): garantits_sense_servir = 386.90 (31.95), profit = 470697.90 (84907.94), temps = 27.46 (2.09)
+('HC', 4000.0) (n=10): garantits_sense_servir = 210.50 (56.18), profit = 699278.70 (91289.65), temps = 41.31 (5.07)
+('HC', 6000.0) (n=10): garantits_sense_servir = 78.30 (90.97), profit = 850397.60 (125779.62), temps = 78.06 (36.21)
+('HC', 8000.0) (n=10): garantits_sense_servir = 0.00 (0.00), profit = 1052048.26 (75179.59), temps = 182.87 (83.69)
 ('HC', 10000.0) (n=10): garantits_sense_servir = 0.00 (0.00), profit = 1124691.26 (86040.20), temps = 287.44 (109.93)
 ('SA', 0.0) (n=10): garantits_sense_servir = 736.20 (12.28), profit = -396385.50 (11989.25), temps = 2.49 (0.05)
 ('SA', 100.0) (n=10): garantits_sense_servir = 700.70 (18.75), profit = -363728.05 (17334.89), temps = 2.63 (0.06)
 ('SA', 500.0) (n=10): garantits_sense_servir = 295.20 (66.77), profit = 191446.02 (120346.48), temps = 3.97 (0.31)
 ('SA', 2000.0) (n=10): garantits_sense_servir = 4.30 (5.23), profit = 1246114.91 (52424.08), temps = 3.86 (0.58)
+('SA', 4000.0) (n=10): garantits_sense_servir = 5.10 (6.14), profit = 1243490.26 (52864.32), temps = 3.73 (0.56)
+('SA', 6000.0) (n=10): garantits_sense_servir = 5.00 (6.13), profit = 1245430.66 (52175.51), temps = 3.81 (0.69)
+('SA', 8000.0) (n=10): garantits_sense_servir = 5.00 (6.53), profit = 1246025.21 (52520.99), temps = 3.81 (0.73)
 ('SA', 10000.0) (n=10): garantits_sense_servir = 4.70 (5.58), profit = 1245575.91 (52585.20), temps = 3.84 (0.66)
 
 === EXP 6: centrals de tipus C ===
@@ -97,3 +103,16 @@ Move+Swap (n=10): value = 1260611.20 (51815.77), temps = 64.19 (23.90), passos =
   B_on: SA 5-10-50 - SA 5-10-25 = -0.10, t = -1.00 -> diferència no significativa
   A_on: SA 5-10-75 - SA 5-10-25 = 0.00 (sempre igual)
   B_on: SA 5-10-75 - SA 5-10-25 = -0.20, t = -1.50 -> diferència no significativa
+
+=== EXP A: ponderació w1 (HC) ===
+0.0 (n=10): profit = 1229859.21 (61485.41), lost_mw = 486.88 (116.75), temps = 0.38 (0.47)
+0.01 (n=10): profit = 1260614.96 (51815.72), lost_mw = 375.78 (68.75), temps = 60.42 (22.67)
+1.0 (n=10): profit = 1260614.96 (51815.72), lost_mw = 375.78 (68.75), temps = 59.11 (21.56)
+10.0 (n=10): profit = 1260644.21 (51829.26), lost_mw = 374.63 (67.72), temps = 59.78 (21.54)
+100.0 (n=10): profit = 1261325.51 (51705.22), lost_mw = 373.05 (65.62), temps = 59.75 (24.77)
+
+=== EXP B: HC vs SA ===
+HC (n=10): value = 1260611.20 (51815.77), temps = 60.94 (22.62)
+SA (n=10): value = 1262695.51 (51978.26), temps = 10.37 (6.79)
+  value: SA - HC = 2084.31, t = 1.96 -> diferència no significativa
+  temps: SA - HC = -50.58, t = -5.59 -> diferència significativa

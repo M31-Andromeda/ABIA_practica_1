@@ -224,7 +224,7 @@ def experiment_4():
 
 # EXP 5: Si ara no servir a un client garantit tmb és solució vàlida, com se'ls hauria de penalitzar a la funció heurística? (HC i SA)
 def experiment_5():
-    penalties = (4000, 6000, 8000)
+    penalties = (0, 100, 500, 2000, 4000, 6000, 8000, 10000)
     for algorithm in ("HC", "SA"):
         for penalty in penalties:
             values, durations, steps, neighbors, unserved_guaranteed, profits = [], [], [], [], [], []
@@ -364,7 +364,7 @@ def experiment_B():
     for algorithm in ("HC", "SA"):
         values, durations, steps, neighbors, profits, losses = [], [], [], [], [], []
         for params in escenaris:
-            config = replace(params) #falta comprovar al exp3
+            config = replace(params)
 
             if algorithm == "HC":
                 e = EnergyNetworkProblem(config)
@@ -379,7 +379,7 @@ def experiment_B():
             if algorithm == "HC":
                 solution = hill_climbing(ip)
             else:
-                solution = simulated_annealing(ip, schedule) #falta saber el millot schedule a partor del exp3
+                solution = simulated_annealing(ip, schedule) #schedule escollit a l'experiment 3
             duration = time.perf_counter() - start
             value = e.value(solution)
             profit, lost_mw = profit_and_losses(e, solution)
@@ -400,4 +400,9 @@ def experiment_B():
               f"Avg Steps/Iter: {mean(steps):.2f}, Avg Neighbors: {mean(neighbors):.2f}")
 
 if __name__ == "__main__":
-    experiment_3B()
+    #ús: python experiments.py 1 2 3A ... (els experiments que es vulguin executar)
+    import sys
+    experiments = {"1": experiment_1, "2": experiment_2, "3A": experiment_3A, "3B": experiment_3B, "4": experiment_4,
+                   "5": experiment_5, "6": experiment_6, "A": experiment_A, "B": experiment_B}
+    for nom in sys.argv[1:]:
+        experiments[nom]()
