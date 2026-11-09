@@ -12,6 +12,7 @@ from resultats import guardar
 
 import math
 
+#escenari base de l'enunciat amb les seeds 0 a 9 i la configuració fixada als experiments 1 i 2 (Move + Swap, solució inicial 1)
 escenaris = [Params(seed=seed, 
                     counts=[5, 10, 25], 
                     count=1000,
@@ -23,6 +24,7 @@ escenaris = [Params(seed=seed,
                     guaranteed_penalty=None)
                     for seed in range(10)]
 
+#schedule del SA escollit a l'experiment 3: k = 0,01, T_final = 1e-5 i 500.000 iteracions
 schedule = exp_schedule(k=0.01, lam=math.log(0.01/0.00001)/500_000, limit=500_000)
 
 
@@ -88,8 +90,8 @@ def experiment_2():
             profits.append(profit)
             losses.append(lost_mw)
             durations.append(duration)
-            steps.append(ip.succs - 1)          # d'actions (i restem 1 per l'estat final que no el volem comptar)
-            neighbors.append(ip.states)         # de result
+            steps.append(ip.succs - 1)          # ip.succs compta les crides a actions(): restem la de l'òptim local, que no és cap pas
+            neighbors.append(ip.states)         # ip.states compta les crides a result(), és a dir, els veïns avaluats
             guardar("exp2", {"ini_sol_type": ini_sol_type, "seed": params.seed, "value": value, "profit": profit, "lost_mw": lost_mw, "temps": duration, "passos": ip.succs - 1, "veins": ip.states})
 
         if not values:
@@ -110,7 +112,7 @@ def experiment_3A():
                 continue
 
             values, profits, losses, durations, iterations, neighbors = [], [], [], [], [], []
-            max_iter = 500_000 # limit fixat arbitrareament per escollir la millor combinació de k y T_final, l'ajustarem mes endevant 
+            max_iter = 500_000 # limit fixat arbitràriament per escollir la millor combinació de k i T_final; l'ajustem a l'experiment 3B
             lam = math.log(k/T_final)/max_iter
 
             for params in escenaris:
@@ -321,8 +323,7 @@ def experiment_6():
 
 
 
-# Teniu `w1 = 0.01`, que penalitza els MW perduts, però no el varieu enlloc. Afegiu un experiment
-#  petit amb HC i `w1` a 0, 0.01, 1, 10 i 100, i compareu benefici, MW perduts i temps.
+# EXP A: quin pes w1 cal donar als MW perduts a l'heurística? (Hill Climbing, no el demana l'enunciat)
 def experiment_A():
     weights = (0, 0.01, 1, 10, 100)
     for w in weights:
@@ -355,8 +356,7 @@ def experiment_A():
               f"Avg Lost: {mean(losses):.2f} MW, Avg Duration: {mean(durations):.4f}s, "
               f"Avg Steps: {mean(steps):.2f}, Avg Neighbors: {mean(neighbors):.2f}")
 
-# Comparar resultats de HC i SA amb les mateixes condicions (operadors, sol inicial).
-# Millor model de HC vs millor model de SA.
+# EXP B: HC vs SA, cadascun amb la seva millor configuració i les mateixes instàncies (no el demana l'enunciat)
 def experiment_B():
     
     for algorithm in ("HC", "SA"):

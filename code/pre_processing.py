@@ -29,11 +29,11 @@ def compute_customer_gain(customers, guaranteed_penalty = None):
     #el que guanya el valor quan un client passa de no servit a servit: cobrem la tarifa i deixem de pagar la indemnització
     gains = list()
     for customer in customers:
-        if customer.contract_type == 0: # GUARANTED
+        if customer.contract_type == 0: # GUARANTEED
             tariff = get_guaranteed_tariff(customer.customer_type)
             if guaranteed_penalty is not None:  #experiment 5
                 tariff += guaranteed_penalty
-        else: # NOT GUARANTED
+        else: # NOT GUARANTEED
             tariff = get_non_guaranteed_tariff(customer.customer_type)
         gains.append((tariff + get_non_service_penalty(customer.customer_type))*customer.demand_mw)
     return gains

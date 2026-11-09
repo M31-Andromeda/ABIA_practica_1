@@ -60,7 +60,7 @@ def get_initial_config(ini_sol_type, customers, power_plants, supply_matrix):
                 if best_candidate_index is None:
                     best_candidate_index = plant_i
                     best_candidate = candidate
-                elif candidate > best_candidate: #compara dos tuples de l'estil (-2.3, True, 500) on el primer és el -cost, el segon element és si esta encessa, i el tercer que tan gran es la central
+                elif candidate > best_candidate: #compara dos tuples de l'estil (-2.3, True, 500): el primer element és el -cost, el segon si la central està encesa i el tercer com de gran és
                     best_candidate_index = plant_i
                     best_candidate = candidate
 

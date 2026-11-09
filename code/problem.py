@@ -63,7 +63,7 @@ class EnergyNetworkProblem(Problem):
                     if(self.supply_matrix[cust_i][plant_j] <= state.plants_available_energy[plant_j]):
                         available_actions.append(Move(cust_i, on_plant_i, plant_j))
 
-                # MOVE: desassgnar si està servit i (no és garantit ó hi ha penalització per als garantits) ##experiment 5
+                # MOVE: desassignar si està servit i no és garantit (o, a l'experiment 5, si hi ha penalització per als garantits)
                 if on_plant_i is not None and (customer.contract_type == 1 or self.guaranteed_penalty is not None):
                     available_actions.append(Move(cust_i,on_plant_i, None))
 
@@ -149,17 +149,17 @@ class EnergyNetworkProblem(Problem):
                         transactions.append(-1*self.guaranteed_penalty*customer.demand_mw)
                 else:
                     plant_on[plant_i] = True
-                    if customer.contract_type == 0: # GUARANTED
+                    if customer.contract_type == 0: # GUARANTEED
                         transactions.append(get_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
 
-                    elif customer.contract_type == 1: # NOT GUARANTED
+                    elif customer.contract_type == 1: # NOT GUARANTEED
                         transactions.append(get_non_guaranteed_tariff(customer.customer_type)*customer.demand_mw)
 
                     #penalitza els MW perduts en el transport, que creixen per trams amb la distància i amb la demanda del client
                     transactions.append(-self.w1*(self.supply_matrix[cust_i][plant_i] - customer.demand_mw))
 
 
-            #les centrals enceses paguen cost fix + produccio total i les apagades el cost fix
+            #les centrals enceses paguen el cost fix més el de tota la producció, i les apagades el cost fix de parada
             for plant_i, plant in enumerate(self.power_plants):
                 if plant_on[plant_i]:
                     transactions.append(-1*(get_running_cost(plant.plant_type) + get_production_cost_per_mw(plant.plant_type)* plant.production_mw))
